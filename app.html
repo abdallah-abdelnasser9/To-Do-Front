@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: rgba(30, 30, 46, 0.85);
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #6c63ff, #9d4edd);
+      background-clip: text;   
+      -webkit-background-clip: text; 
+      color: transparent;     
+      font-weight: 700;
+}
+
+    header button {
+      background: linear-gradient(135deg, #ff6b6b, #ff5252);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+    }
+
+    header button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+    }
+
+    .task-creator {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(30, 30, 46, 0.85);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 150px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      color: #a0a0c0;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    form input, form textarea {
+      padding: 0.8rem 1rem;
+      border: 2px solid #2a2a3e;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #1e1e2e;
+      color: #e0e0e0;
+    }
+
+    form textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    form input:focus, form textarea:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    form button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    form button[type="submit"] {
+      background: linear-gradient(135deg, #6c63ff, #9d4edd);
+      color: #fff;
+    }
+
+    form button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
+    }
+
+    form button#deleteAll {
+      background: linear-gradient(135deg, #ff6b6b, #ff5252);
+      color: #fff;
+    }
+
+    form button#deleteAll:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+    }
+
+    #tasksList {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .task {
+      background: rgba(30, 30, 46, 0.85);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      animation: fadeIn 0.5s ease forwards;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .task::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(135deg, #6c63ff, #9d4edd);
+    }
+
+    .task.completed {
+      opacity: 0.7;
+      background: rgba(40, 40, 60, 0.7);
+    }
+
+    .task.completed::before {
+      background: linear-gradient(135deg, #00b894, #00cec9);
+    }
+
+    .task h3 {
+      font-size: 1.3rem;
+      color: #f0f0f0;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .task.completed h3 {
+      text-decoration: line-through;
+      color: #a0a0c0;
+    }
+
+    .task p {
+      margin-bottom: 0.5rem;
+      color: #c0c0e0;
+      line-height: 1.5;
+    }
+
+    .task small {
+      display: block;
+      margin-bottom: 1rem;
+      color: #a0a0c0;
+      font-size: 0.85rem;
+    }
+
+    .task .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .task .actions button {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      min-width: 120px;
+    }
+
+    .task .actions button.edit {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      color: #fff;
+    }
+
+    .task .actions button.edit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+    }
+
+    .task .actions button.toggle {
+      background: linear-gradient(135deg, #00b894, #00cec9);
+      color: #fff;
+    }
+
+    .task .actions button.toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+    }
+
+    .task .actions button.delete {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff;
+    }
+
+    .task .actions button.delete:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+
+    #msg {
+      margin-top: 1rem;
+      color: #ff6b6b;
+      font-weight: 500;
+      min-height: 1.2em;
+      text-align: center;
+    }
+    .tasks-section {
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 2rem;
+}
+
+    .tasks-section h2 {
+     color: #e0e0e0;
+     margin-bottom: 1.5rem;
+     font-size: 1.5rem;
+     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+    #activeTasksList {
+     display: flex;
+     flex-direction: column;
+     gap: 1.5rem;
+}
+
+    #completedTasksList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .edit-modal {
+      background: #1e1e2e;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      width: 90%;
+      max-width: 500px;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-overlay.active .edit-modal {
+      transform: translateY(0);
+    }
+
+    .edit-modal h2 {
+      margin-bottom: 1.5rem;
+      color: #f0f0f0;
+      font-size: 1.5rem;
+    }
+
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .edit-form .form-group {
+      width: 100%;
+    }
+
+    .edit-form textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      background: #1e1e2e;
+      color: #e0e0e0;
+      border: 2px solid #2a2a3e;
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+    }
+
+    .edit-form input {
+      background: #1e1e2e;
+      color: #e0e0e0;
+      border: 2px solid #2a2a3e;
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+    }
+
+    .edit-form input:focus, .edit-form textarea:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .modal-actions button.save {
+      background: linear-gradient(135deg, #6c63ff, #9d4edd);
+      color: white;
+    }
+
+    .modal-actions button.save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+    }
+
+    .modal-actions button.cancel {
+      background: #2a2a3e;
+      color: #a0a0c0;
+    }
+
+    .modal-actions button.cancel:hover {
+      background: #3a3a4e;
+      transform: translateY(-2px);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #a0a0c0;
+      transition: color 0.3s ease;
+    }
+
+    .close-modal:hover {
+      color: #ff6b6b;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    @media (max-width: 600px) {
+      form {
+        flex-direction: column;
+      }
+
+      .form-group {
+        width: 100%;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .task .actions {
+        flex-direction: column;
+      }
+
+      .task .actions button {
+        min-width: auto;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .edit-modal {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Your Tasks</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <section class="task-creator">
+    <form id="taskForm">
+      <div class="form-group">
+        <label for="title">Task Title</label>
+        <input name="title" placeholder="Enter task title" required />
+      </div>
+      <div class="form-group">
+        <label for="dueDate">Due Date</label>
+        <input name="dueDate" type="date" />
+      </div>
+      <div class="form-group">
+        <label for="description">Description</label>
+        <input name="description" placeholder="Task description" />
+      </div>
+      <button type="submit">Add Task</button>
+      <button type="button" id="deleteAll">Delete All</button>
+    </form>
+  </section>
+
+  <div class="tasks-section">
+    <h2>Active Tasks</h2>
+    <section id="activeTasksList"></section>
+  </div>
+
+  <div class="tasks-section">
+    <h2>Completed Tasks</h2>
+    <section id="completedTasksList"></section>
+  </div>
+
+  <div id="msg"></div>
+  <div class="modal-overlay" id="editModal">
+    <div class="edit-modal">
+      <button class="close-modal">&times;</button>
+      <h2>Edit Task</h2>
+      <form class="edit-form" id="editTaskForm">
+        <div class="form-group">
+          <label for="editTitle">Task Title</label>
+          <input type="text" id="editTitle" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description" placeholder="Task description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="editDueDate">Due Date</label>
+          <input type="date" id="editDueDate" name="dueDate">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel">Cancel</button>
+          <button type="submit" class="save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://to-do-backend-19oc.onrender.com/';
+    const activeTasksList = document.getElementById('activeTasksList');
+    const completedTasksList = document.getElementById('completedTasksList');
+    const msg = document.getElementById('msg');
+    const editModal = document.getElementById('editModal');
+    const editTaskForm = document.getElementById('editTaskForm');
+    let currentEditTaskId = null;
+
+    async function getMe() {
+      try {
+        const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Not authenticated');
+        return res.json();
+      } catch {
+        window.location.href = 'login.html';
+      }
+    }
+
+    async function fetchTasks() {
+      const res = await fetch(`${API}/tasks`, { credentials: 'include' });
+      if (!res.ok) { msg.textContent = 'Failed to load tasks'; return; }
+      const body = await res.json();
+      renderTasks(body.tasks || []);
+    }
+
+    function renderTasks(tasks) {
+      activeTasksList.innerHTML = '';
+      completedTasksList.innerHTML = '';
+      
+      if (!tasks.length) { 
+        activeTasksList.innerHTML = '<div class="task"><p>No tasks yet. Add your first task above!</p></div>'; 
+        return; 
+      }
+
+      const activeTasks = tasks.filter(t => !t.completed);
+      const completedTasks = tasks.filter(t => t.completed);
+
+      if (!activeTasks.length) {
+        activeTasksList.innerHTML = '<div class="task"><p>All tasks completed! Great job! 🎉</p></div>';
+      } else {
+        activeTasks.forEach(t => {
+          const el = createTaskElement(t);
+          activeTasksList.appendChild(el);
+        });
+      }
+
+      if (!completedTasks.length) {
+        completedTasksList.innerHTML = '<div class="task"><p>No completed tasks yet.</p></div>';
+      } else {
+        completedTasks.forEach(t => {
+          const el = createTaskElement(t);
+          completedTasksList.appendChild(el);
+        });
+      }
+    }
+
+    function createTaskElement(t) {
+      const el = document.createElement('div');
+      el.className = `task ${t.completed ? 'completed' : ''}`;
+      el.innerHTML = `
+        <h3>${t.title} ${t.completed ? '✅' : ''}</h3>
+        <p>${t.description || ''}</p>
+        <small>Due: ${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'}</small>
+        <div class="actions">
+          <button data-id="${t._id}" class="toggle">${t.completed ? 'Mark Active' : 'Mark Complete'}</button>
+          <button data-id="${t._id}" class="edit">Edit</button>
+          <button data-id="${t._id}" class="delete">Delete</button>
+        </div>
+      `;
+      return el;
+    }
+    function openEditModal(task) {
+      currentEditTaskId = task._id;
+      document.getElementById('editTitle').value = task.title;
+      document.getElementById('editDescription').value = task.description || '';
+      document.getElementById('editDueDate').value = task.dueDate ? task.dueDate.split('T')[0] : '';
+      editModal.classList.add('active');
+    }
+
+    function closeEditModal() {
+      editModal.classList.remove('active');
+      currentEditTaskId = null;
+      editTaskForm.reset();
+    }
+
+    document.querySelector('.close-modal').addEventListener('click', closeEditModal);
+    document.querySelector('.modal-actions .cancel').addEventListener('click', closeEditModal);
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        closeEditModal();
+      }
+    });
+
+    editTaskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentEditTaskId) return;
+
+      const formData = new FormData(editTaskForm);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch(`${API}/tasks/${currentEditTaskId}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed to update task');
+        
+        closeEditModal();
+        fetchTasks();
+        msg.textContent = 'Task updated successfully!';
+        setTimeout(() => msg.textContent = '', 3000);
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+
+    document.getElementById('taskForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      msg.textContent = '';
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        const res = await fetch(`${API}/tasks`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to add task');
+        e.target.reset();
+        fetchTasks();
+        msg.textContent = 'Task added successfully!';
+        setTimeout(() => msg.textContent = '', 3000);
+      } catch (err) { msg.textContent = err.message; }
+    });
+
+    function handleTaskAction(e) {
+      const id = e.target.dataset.id;
+      if (!id) return;
+      
+      if (e.target.classList.contains('delete')) {
+        if (!confirm('Delete this task?')) return;
+        fetch(`${API}/tasks/${id}`, { method: 'DELETE', credentials: 'include' }).then(fetchTasks);
+      } else if (e.target.classList.contains('toggle')) {
+        fetch(`${API}/tasks/${id}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(current => {
+            return fetch(`${API}/tasks/${id}`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ completed: !current.task.completed })
+            });
+          })
+          .then(fetchTasks);
+      } else if (e.target.classList.contains('edit')) {
+        fetch(`${API}/tasks/${id}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            openEditModal(data.task);
+          })
+          .catch(err => {
+            msg.textContent = 'Failed to load task data';
+          });
+      }
+    }
+
+    activeTasksList.addEventListener('click', handleTaskAction);
+    completedTasksList.addEventListener('click', handleTaskAction);
+
+    document.getElementById('deleteAll').addEventListener('click', async () => {
+      if (!confirm('Delete ALL tasks?')) return;
+      await fetch(`${API}/tasks`, { method: 'DELETE', credentials: 'include' });
+      fetchTasks();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
+      window.location.href = 'login.html';
+    });
+
+    (async () => { await getMe(); fetchTasks(); })();
+  </script>
+</body>
+</html>
