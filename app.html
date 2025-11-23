@@ -530,192 +530,186 @@
     </div>
   </div>
 
-  <script>
-    const API = 'https://to-do-backend-19oc.onrender.com';
-    const activeTasksList = document.getElementById('activeTasksList');
-    const completedTasksList = document.getElementById('completedTasksList');
-    const msg = document.getElementById('msg');
-    const editModal = document.getElementById('editModal');
-    const editTaskForm = document.getElementById('editTaskForm');
-    let currentEditTaskId = null;
+<script>
+  const API = 'https://to-do-backend-19oc.onrender.com/api';
+  const activeTasksList = document.getElementById('activeTasksList');
+  const completedTasksList = document.getElementById('completedTasksList');
+  const msg = document.getElementById('msg');
+  const editModal = document.getElementById('editModal');
+  const editTaskForm = document.getElementById('editTaskForm');
+  let currentEditTaskId = null;
 
-    async function getMe() {
-      try {
-        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
-        if (!res.ok) throw new Error('Not authenticated');
-        return res.json();
-      } catch {
-        window.location.href = 'login.html';
-      }
-    }
-
-    async function fetchTasks() {
-      const res = await fetch(`${API}/tasks`, { credentials: 'include' });
-      if (!res.ok) { msg.textContent = 'Failed to load tasks'; return; }
-      const body = await res.json();
-      renderTasks(body.tasks || []);
-    }
-
-    function renderTasks(tasks) {
-      activeTasksList.innerHTML = '';
-      completedTasksList.innerHTML = '';
-      
-      if (!tasks.length) { 
-        activeTasksList.innerHTML = '<div class="task"><p>No tasks yet. Add your first task above!</p></div>'; 
-        return; 
-      }
-
-      const activeTasks = tasks.filter(t => !t.completed);
-      const completedTasks = tasks.filter(t => t.completed);
-
-      if (!activeTasks.length) {
-        activeTasksList.innerHTML = '<div class="task"><p>All tasks completed! Great job! 🎉</p></div>';
-      } else {
-        activeTasks.forEach(t => {
-          const el = createTaskElement(t);
-          activeTasksList.appendChild(el);
-        });
-      }
-
-      if (!completedTasks.length) {
-        completedTasksList.innerHTML = '<div class="task"><p>No completed tasks yet.</p></div>';
-      } else {
-        completedTasks.forEach(t => {
-          const el = createTaskElement(t);
-          completedTasksList.appendChild(el);
-        });
-      }
-    }
-
-    function createTaskElement(t) {
-      const el = document.createElement('div');
-      el.className = `task ${t.completed ? 'completed' : ''}`;
-      el.innerHTML = `
-        <h3>${t.title} ${t.completed ? '✅' : ''}</h3>
-        <p>${t.description || ''}</p>
-        <small>Due: ${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'}</small>
-        <div class="actions">
-          <button data-id="${t._id}" class="toggle">${t.completed ? 'Mark Active' : 'Mark Complete'}</button>
-          <button data-id="${t._id}" class="edit">Edit</button>
-          <button data-id="${t._id}" class="delete">Delete</button>
-        </div>
-      `;
-      return el;
-    }
-    function openEditModal(task) {
-      currentEditTaskId = task._id;
-      document.getElementById('editTitle').value = task.title;
-      document.getElementById('editDescription').value = task.description || '';
-      document.getElementById('editDueDate').value = task.dueDate ? task.dueDate.split('T')[0] : '';
-      editModal.classList.add('active');
-    }
-
-    function closeEditModal() {
-      editModal.classList.remove('active');
-      currentEditTaskId = null;
-      editTaskForm.reset();
-    }
-
-    document.querySelector('.close-modal').addEventListener('click', closeEditModal);
-    document.querySelector('.modal-actions .cancel').addEventListener('click', closeEditModal);
-
-    editModal.addEventListener('click', (e) => {
-      if (e.target === editModal) {
-        closeEditModal();
-      }
-    });
-
-    editTaskForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentEditTaskId) return;
-
-      const formData = new FormData(editTaskForm);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-        const res = await fetch(`${API}/tasks/${currentEditTaskId}`, {
-          method: 'PUT',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        if (!res.ok) throw new Error('Failed to update task');
-        
-        closeEditModal();
-        fetchTasks();
-        msg.textContent = 'Task updated successfully!';
-        setTimeout(() => msg.textContent = '', 3000);
-      } catch (err) {
-        msg.textContent = err.message;
-      }
-    });
-
-    document.getElementById('taskForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      msg.textContent = '';
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      try {
-        const res = await fetch(`${API}/tasks`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('Failed to add task');
-        e.target.reset();
-        fetchTasks();
-        msg.textContent = 'Task added successfully!';
-        setTimeout(() => msg.textContent = '', 3000);
-      } catch (err) { msg.textContent = err.message; }
-    });
-
-    function handleTaskAction(e) {
-      const id = e.target.dataset.id;
-      if (!id) return;
-      
-      if (e.target.classList.contains('delete')) {
-        if (!confirm('Delete this task?')) return;
-        fetch(`${API}/tasks/${id}`, { method: 'DELETE', credentials: 'include' }).then(fetchTasks);
-      } else if (e.target.classList.contains('toggle')) {
-        fetch(`${API}/tasks/${id}`, { credentials: 'include' })
-          .then(r => r.json())
-          .then(current => {
-            return fetch(`${API}/tasks/${id}`, {
-              method: 'PUT',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ completed: !current.task.completed })
-            });
-          })
-          .then(fetchTasks);
-      } else if (e.target.classList.contains('edit')) {
-        fetch(`${API}/tasks/${id}`, { credentials: 'include' })
-          .then(r => r.json())
-          .then(data => {
-            openEditModal(data.task);
-          })
-          .catch(err => {
-            msg.textContent = 'Failed to load task data';
-          });
-      }
-    }
-
-    activeTasksList.addEventListener('click', handleTaskAction);
-    completedTasksList.addEventListener('click', handleTaskAction);
-
-    document.getElementById('deleteAll').addEventListener('click', async () => {
-      if (!confirm('Delete ALL tasks?')) return;
-      await fetch(`${API}/tasks`, { method: 'DELETE', credentials: 'include' });
-      fetchTasks();
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+  async function getMe() {
+    try {
+      const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Not authenticated');
+      return res.json();
+    } catch {
       window.location.href = 'login.html';
-    });
+    }
+  }
 
-    (async () => { await getMe(); fetchTasks(); })();
-  </script>
+  async function fetchTasks() {
+    const res = await fetch(`${API}/tasks`, { credentials: 'include' }); 
+    if (!res.ok) { msg.textContent = 'Failed to load tasks'; return; }
+    const body = await res.json();
+    renderTasks(body.tasks || []);
+  }
+
+  function renderTasks(tasks) {
+    activeTasksList.innerHTML = '';
+    completedTasksList.innerHTML = '';
+    
+    if (!tasks.length) { 
+      activeTasksList.innerHTML = '<div class="task"><p>No tasks yet. Add your first task above!</p></div>'; 
+      return; 
+    }
+
+    const activeTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+
+    if (!activeTasks.length) {
+      activeTasksList.innerHTML = '<div class="task"><p>All tasks completed! Great job! 🎉</p></div>';
+    } else {
+      activeTasks.forEach(t => {
+        const el = createTaskElement(t);
+        activeTasksList.appendChild(el);
+      });
+    }
+
+    if (!completedTasks.length) {
+      completedTasksList.innerHTML = '<div class="task"><p>No completed tasks yet.</p></div>';
+    } else {
+      completedTasks.forEach(t => {
+        const el = createTaskElement(t);
+        completedTasksList.appendChild(el);
+      });
+    }
+  }
+
+  function createTaskElement(t) {
+    const el = document.createElement('div');
+    el.className = `task ${t.completed ? 'completed' : ''}`;
+    el.innerHTML = `
+      <h3>${t.title} ${t.completed ? '✅' : ''}</h3>
+      <p>${t.description || ''}</p>
+      <small>Due: ${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'}</small>
+      <div class="actions">
+        <button data-id="${t._id}" class="toggle">${t.completed ? 'Mark Active' : 'Mark Complete'}</button>
+        <button data-id="${t._id}" class="edit">Edit</button>
+        <button data-id="${t._id}" class="delete">Delete</button>
+      </div>
+    `;
+    return el;
+  }
+
+  function openEditModal(task) {
+    currentEditTaskId = task._id;
+    document.getElementById('editTitle').value = task.title;
+    document.getElementById('editDescription').value = task.description || '';
+    document.getElementById('editDueDate').value = task.dueDate ? task.dueDate.split('T')[0] : '';
+    editModal.classList.add('active');
+  }
+
+  function closeEditModal() {
+    editModal.classList.remove('active');
+    currentEditTaskId = null;
+    editTaskForm.reset();
+  }
+
+  document.querySelector('.close-modal').addEventListener('click', closeEditModal);
+  document.querySelector('.modal-actions .cancel').addEventListener('click', closeEditModal);
+
+  editModal.addEventListener('click', (e) => {
+    if (e.target === editModal) closeEditModal();
+  });
+
+  editTaskForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentEditTaskId) return;
+
+    const formData = new FormData(editTaskForm);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const res = await fetch(`${API}/tasks/${currentEditTaskId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Failed to update task');
+      closeEditModal();
+      fetchTasks();
+      msg.textContent = 'Task updated successfully!';
+      setTimeout(() => msg.textContent = '', 3000);
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  });
+
+  document.getElementById('taskForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    msg.textContent = '';
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    try {
+      const res = await fetch(`${API}/tasks`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to add task');
+      e.target.reset();
+      fetchTasks();
+      msg.textContent = 'Task added successfully!';
+      setTimeout(() => msg.textContent = '', 3000);
+    } catch (err) { msg.textContent = err.message; }
+  });
+
+  function handleTaskAction(e) {
+    const id = e.target.dataset.id;
+    if (!id) return;
+
+    if (e.target.classList.contains('delete')) {
+      if (!confirm('Delete this task?')) return;
+      fetch(`${API}/tasks/${id}`, { method: 'DELETE', credentials: 'include' }).then(fetchTasks); // ✅ updated
+    } else if (e.target.classList.contains('toggle')) {
+      fetch(`${API}/tasks/${id}`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(current => {
+          return fetch(`${API}/tasks/${id}`, { 
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: !current.task.completed })
+          });
+        })
+        .then(fetchTasks);
+    } else if (e.target.classList.contains('edit')) {
+      fetch(`${API}/tasks/${id}`, { credentials: 'include' }) 
+        .then(r => r.json())
+        .then(data => openEditModal(data.task))
+        .catch(() => { msg.textContent = 'Failed to load task data'; });
+    }
+  }
+
+  activeTasksList.addEventListener('click', handleTaskAction);
+  completedTasksList.addEventListener('click', handleTaskAction);
+
+  document.getElementById('deleteAll').addEventListener('click', async () => {
+    if (!confirm('Delete ALL tasks?')) return;
+    await fetch(`${API}/tasks`, { method: 'DELETE', credentials: 'include' });
+    fetchTasks();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' }); 
+    window.location.href = 'login.html';
+  });
+
+  (async () => { await getMe(); fetchTasks(); })();
+</script>
 </body>
 </html>
