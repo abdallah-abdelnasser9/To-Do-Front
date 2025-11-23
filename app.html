@@ -541,7 +541,7 @@
 
     async function getMe() {
       try {
-        const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
+        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
         if (!res.ok) throw new Error('Not authenticated');
         return res.json();
       } catch {
@@ -711,7 +711,7 @@
     });
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
+      await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
       window.location.href = 'login.html';
     });
 
