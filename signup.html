@@ -191,15 +191,13 @@
 
         const body = await res.json();
         if (!res.ok) throw new Error(body.message || 'Signup failed');
-
-        // SUCCESS MESSAGE (REPLACEMENT)
         msg.style.color = '#00b894';
         msg.style.background = 'rgba(0, 184, 148, 0.1)';
         msg.textContent = body.message || "User registered successfully!";
 
         setTimeout(() => {
           window.location.href = 'login.html';
-        }, 1500);
+        }, 100);
 
       } catch (err) {
         msg.style.color = '#ff6b6b';
