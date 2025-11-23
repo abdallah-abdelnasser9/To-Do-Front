@@ -709,11 +709,7 @@
     window.location.href = 'login.html';
   });
 
- (async () => {
-  await new Promise(r => setTimeout(r, 5000)); 
-  await getMe();
-  fetchTasks();
-})();
+  (async () => { await getMe(); fetchTasks(); })();
 </script>
 </body>
 </html>
