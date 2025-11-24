@@ -674,7 +674,7 @@
 
     if (e.target.classList.contains('delete')) {
       if (!confirm('Delete this task?')) return;
-      fetch(`${API}/tasks/${id}`, { method: 'DELETE', credentials: 'include' }).then(fetchTasks); // ✅ updated
+      fetch(`${API}/tasks/${id}`, { method: 'DELETE', credentials: 'include' }).then(fetchTasks);
     } else if (e.target.classList.contains('toggle')) {
       fetch(`${API}/tasks/${id}`, { credentials: 'include' })
         .then(r => r.json())
